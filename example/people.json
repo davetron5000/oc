@@ -1,0 +1,58 @@
+{
+  "team": {
+    "members": {
+      "Dave": {
+        "name": "Dave Copeland",
+        "title": "Director"
+      },
+      "Gary": {
+        "name": "Gary Jones",
+        "title": "Director"
+      },
+      "Pat": {
+        "name": "Pat Johnson",
+        "title": "Software Engineer"
+      },
+      "Aaron": {
+        "name": "Aaron Smith",
+        "title": "Senior Software Engineer"
+      },
+      "Bob": {
+        "name": "Bob Williams",
+        "title": "Lead Software Engineer"
+        },
+      "Chris": {
+        "name": "Chris Roma",
+        "title": "Designer"
+      },
+      "Daniel": {
+        "name": "Daniel Boulud",
+        "title": "Manager"
+      },
+      "Diane": {
+        "name": "Diane Jackson",
+        "title": "Software Engineer"
+      },
+      "Elsie": {
+        "name": "Elsie Chambers",
+        "title": "Lead Software Engineer"
+      },
+      "Frank": {
+        "name": "Frank Blumenthal",
+        "title": "Junior Software Engineer"
+      },
+      "Gerry": {
+        "name": "Gerry Graf",
+        "title": "Lead Software Engineer"
+      },
+      "Harriet": {
+        "name": "Harriet Jones",
+        "title": "Junior Software Engineer"
+      },
+      "Ian": {
+        "name": "Ian St. John-Smith",
+        "title": "Software Engineer"
+      }
+    }
+  }
+}

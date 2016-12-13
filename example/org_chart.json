@@ -1,0 +1,41 @@
+{
+  "divisions": [
+    {
+      "name": "Web",
+      "teams": [
+        {
+          "name": "conversion",
+          "label": "Web Conversion",
+          "reportsTo": "Dave",
+          "org": {
+            "Pat": [],
+            "Gerry": [ "Chris", "Daniel" ]
+          }
+        },
+        {
+          "name": "engagement",
+          "label": "Web Engagement",
+          "reportsTo": "Dave",
+          "org": {
+            "Aaron": [],
+            "Bob": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "Platform",
+      "teams": [
+        {
+          "name": "Platform",
+          "reportsTo": "Gary",
+          "org": {
+            "Diane": [],
+            "Elsie": [ "Harriet", "Ian" ],
+            "Frank": []
+          }
+        }
+      ]
+    }
+  ]
+}

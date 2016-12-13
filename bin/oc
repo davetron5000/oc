@@ -1,0 +1,264 @@
+#!/usr/bin/env ruby
+
+require 'optparse'
+require 'methadone'
+require 'oc.rb'
+require 'json'
+
+class OrgStructure
+  def initialize(hash)
+    @hash = hash
+  end
+
+  def divisions(&block)
+    @hash["divisions"].map(&Division).each(&block)
+  end
+
+  class Division
+    def self.to_proc
+      ->(h) { Division.new(h) }
+    end
+
+    attr_reader :id, :name
+    def initialize(hash)
+      @hash = hash
+      @id   = "division_#{@hash['name']}"
+      @name = @hash["label"] || @hash["name"]
+    end
+
+    def multiple_teams?
+      @hash["teams"].size > 1
+    end
+
+    def teams(&block)
+      @hash["teams"].map(&Team).each(&block)
+    end
+  end
+
+  class Team
+    def self.to_proc
+      ->(h) { Team.new(h) }
+    end
+
+    attr_reader :id, :name, :reports_to
+    def initialize(hash)
+      @hash       = hash
+      @id         = @hash['name']
+      @name       = @hash["label"] || @hash["name"]
+      @reports_to = @hash["reportsTo"]
+    end
+
+    def org(&block)
+      @hash["org"].each(&block)
+    end
+  end
+end
+
+class People
+  def initialize(hash)
+    @hash = hash
+  end
+
+  def people(&block)
+    @hash["team"]["members"].map(&Person).each(&block)
+  end
+
+  class Person
+    def self.to_proc
+      ->(id,hash) { Person.new(id,hash) }
+    end
+
+    attr_reader :id,:name, :title
+    def initialize(id,hash)
+      @id = id
+      @name = hash["name"]
+      @title = hash["title"]
+    end
+  end
+end
+class ReportingStructure
+  def initialize(org)
+    @hash = {}
+    org.divisions do |division|
+      division.teams do |team|
+        team.org do |name,reports|
+          manager(team.reports_to, has_report: name)
+          reports.each do |report|
+            manager(name, has_report: report)
+          end
+        end
+      end
+    end
+  end
+
+  def each(&block)
+    @hash.each(&block)
+  end
+
+private
+
+  def manager(manager, has_report: nil)
+    @hash[manager] ||= []
+    @hash[manager] << has_report
+  end
+end
+
+class DOT
+  def initialize(out)
+    @out = IndentedOut.new(out)
+  end
+
+  def graph_config(config)
+    config.each do |thing,value|
+      if value.kind_of?(Hash)
+        values = value.map { |k,v|
+          "#{k}=#{v}"
+        }.join(" ")
+        @out.puts "#{thing}[#{values}]"
+      else
+        @out.puts "#{thing}=#{value}"
+      end
+    end
+  end
+
+  def node(name,nodes_pointed_at: [])
+    dependent_nodes = if nodes_pointed_at.size > 0
+                        "-> {#{nodes_pointed_at.join(',')}}"
+                      else
+                        ""
+                      end
+    @out.puts "#{name} #{dependent_nodes}"
+  end
+
+  def mrecord(name,label_parts)
+    label = label_parts.each_with_index.map { |part,i|
+      "<f#{i}> #{part}"
+    }.join(" | ")
+    @out.puts "#{name} [ label=\"{#{label}}\" shape=Mrecord ];"
+  end
+
+  def digraph(name,&block)
+    @out.puts "digraph #{parameterize(name)} {"
+    @out.indent do
+      block.()
+    end
+    @out.puts "}"
+  end
+
+  def label(value)
+    @out.puts "label = \"#{value}\";"
+  end
+
+  def subgraph(name,label=nil,render_if: true, &block)
+    subgraph_name = if render_if
+                      "cluster_#{parameterize(name)}"
+                    else
+                      parameterize(name)
+                    end
+    subgraph_label = if label && render_if
+                       label
+                     else
+                       nil
+                     end
+    @out.puts "subgraph #{subgraph_name} {"
+    @out.indent do
+      label(subgraph_label) if subgraph_label
+      block.()
+    end
+    @out.puts "}"
+  end
+
+private
+
+  def parameterize(value)
+    value.downcase.gsub(/\s/,'_')
+  end
+
+end
+
+class IndentedOut
+  def initialize(out)
+    @out = out
+    @indent = 2
+  end
+  def puts(string)
+    @out.puts (" " * @indent) + string
+  end
+
+  def indent(&block)
+    @indent += 2
+    block.()
+    @indent -= 2
+  end
+end
+
+class App
+  include Methadone::Main
+  include Methadone::CLILogging
+
+  main do |org_file|
+    puts options.inspect
+    people = People.new(JSON.parse(File.read(options[:people] || "people.json")))
+    org    = OrgStructure.new(JSON.parse(File.read(org_file)))
+
+    reporting_structure = ReportingStructure.new(org)
+
+    out = STDOUT
+    dot = DOT.new(out)
+
+    dot.digraph(File.basename(org_file,".json")) do
+      dot.graph_config(nodesep: "1.0",
+                       node: { shape: :record })
+      org.divisions do |division|
+        dot.subgraph(division.id,division.name, render_if: division.multiple_teams?) do
+          division.teams do |team|
+            dot.subgraph(team.id,team.name) do
+              team.org do |name,reports|
+                reports.each do |report|
+                  dot.node(report)
+                end
+                dot.node(name)
+              end
+            end
+          end
+        end
+      end
+      reporting_structure.each do |manager,reports|
+        dot.node(manager,nodes_pointed_at: reports)
+      end
+      people.people do |person|
+        dot.mrecord(person.id,[person.name,person.title])
+      end
+    end
+  end
+
+  # supplemental methods here
+
+  # Declare command-line interface here
+
+  # description "one line description of your app"
+  #
+  # Accept flags via:
+  # on("--flag VAL","Some flag")
+  # options[flag] will contain VAL
+  #
+  # Specify switches via:
+  # on("--[no-]switch","Some switch")
+  #
+  # Or, just call OptionParser methods on opts
+  #
+  # Require an argument
+  # arg :some_arg 
+  #
+  # # Make an argument optional
+  # arg :optional_arg, :optional
+
+  version Oc::VERSION
+
+  description "Produces an org chart based on your team"
+  on("--people PEOPLE_FILE","JSON file containing data about your people (default ./people.json)")
+
+  leak_exceptions true
+
+  go!
+end

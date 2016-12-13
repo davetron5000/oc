@@ -1,0 +1,46 @@
+  digraph org_chart {
+    nodesep=1.0
+    node[shape=record]
+    subgraph cluster_division_web {
+      label = "Web";
+      subgraph cluster_conversion {
+        label = "Web Conversion";
+        Pat 
+        Chris 
+        Daniel 
+        Gerry 
+      }
+      subgraph cluster_engagement {
+        label = "Web Engagement";
+        Aaron 
+        Bob 
+      }
+    }
+    subgraph division_platform {
+      subgraph cluster_platform {
+        label = "Platform";
+        Diane 
+        Harriet 
+        Ian 
+        Elsie 
+        Frank 
+      }
+    }
+    Dave -> {Pat,Gerry,Aaron,Bob}
+    Gerry -> {Chris,Daniel}
+    Gary -> {Diane,Elsie,Frank}
+    Elsie -> {Harriet,Ian}
+    Dave [ label="{<f0> Dave Copeland | <f1> Director}" shape=Mrecord ];
+    Gary [ label="{<f0> Gary Jones | <f1> Director}" shape=Mrecord ];
+    Pat [ label="{<f0> Pat Johnson | <f1> Software Engineer}" shape=Mrecord ];
+    Aaron [ label="{<f0> Aaron Smith | <f1> Senior Software Engineer}" shape=Mrecord ];
+    Bob [ label="{<f0> Bob Williams | <f1> Lead Software Engineer}" shape=Mrecord ];
+    Chris [ label="{<f0> Chris Roma | <f1> Designer}" shape=Mrecord ];
+    Daniel [ label="{<f0> Daniel Boulud | <f1> Manager}" shape=Mrecord ];
+    Diane [ label="{<f0> Diane Jackson | <f1> Software Engineer}" shape=Mrecord ];
+    Elsie [ label="{<f0> Elsie Chambers | <f1> Lead Software Engineer}" shape=Mrecord ];
+    Frank [ label="{<f0> Frank Blumenthal | <f1> Junior Software Engineer}" shape=Mrecord ];
+    Gerry [ label="{<f0> Gerry Graf | <f1> Lead Software Engineer}" shape=Mrecord ];
+    Harriet [ label="{<f0> Harriet Jones | <f1> Junior Software Engineer}" shape=Mrecord ];
+    Ian [ label="{<f0> Ian St. John-Smith | <f1> Software Engineer}" shape=Mrecord ];
+  }
